@@ -1,0 +1,29 @@
+{
+  "name": "perevod",
+  "version": "1.0.0",
+  "description": "Художественный перевод с английского на русский с сохранением стиля автора",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arfalu/perevod.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arfalu/perevod/issues"
+  },
+  "homepage": "https://github.com/arfalu/perevod#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.9.0",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.5.438"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  },
+  "private": true,
+  "type": "module"
+}

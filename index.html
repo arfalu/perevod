@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Перевод — художественный перевод с английского</title>
+    <meta name="description" content="Художественный перевод английских текстов на русский с сохранением стиля автора." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">Перевод</span>
+        <span class="tagline">художественный перевод с английского — голосом автора</span>
+      </div>
+      <button id="settingsBtn" class="ghost" title="Настройки">⚙ Настройки</button>
+    </header>
+
+    <main class="workspace">
+      <!-- Оригинал -->
+      <section class="pane" id="sourcePane">
+        <div class="pane-head">
+          <h2>Оригинал <span class="lang">EN</span></h2>
+          <div class="pane-actions">
+            <label class="button ghost small" for="fileInput">Загрузить файл</label>
+            <input type="file" id="fileInput" hidden />
+            <button id="clearBtn" class="ghost small">Очистить</button>
+          </div>
+        </div>
+        <div class="dropzone" id="dropzone">
+          <textarea
+            id="source"
+            class="text"
+            spellcheck="false"
+            placeholder="Вставьте английский текст или перетащите сюда файл (.txt, .docx, .pdf, .fb2, .md, .html, .rtf)"
+          ></textarea>
+          <div class="drop-hint">Отпустите файл, чтобы загрузить</div>
+        </div>
+        <div class="pane-foot">
+          <span id="sourceStats" class="muted"></span>
+        </div>
+
+        <details class="card" id="notesCard">
+          <summary>Пожелания к переводу <span class="muted">(необязательно)</span></summary>
+          <textarea
+            id="notes"
+            rows="3"
+            placeholder="Например: «Это детская сказка, читатель 8–10 лет», «Героиня обращается к брату на вы», «Имя Snape переводить как Злей», «Ругательства смягчать»"
+          ></textarea>
+        </details>
+
+        <details class="card" id="passportCard">
+          <summary>Паспорт стиля и глоссарий <span class="muted" id="passportState"></span></summary>
+          <p class="muted small-text">
+            Перед переводом модель читает текст целиком и описывает манеру автора, речь героев и единые
+            варианты имён и терминов. Его можно поправить вручную — правки учтутся при переводе.
+          </p>
+          <textarea id="passport" rows="12" placeholder="Появится после анализа текста"></textarea>
+        </details>
+
+        <div class="run-row">
+          <button id="runBtn" class="primary">Перевести</button>
+          <button id="stopBtn" class="ghost" hidden>Остановить</button>
+          <span id="estimate" class="muted"></span>
+        </div>
+      </section>
+
+      <!-- Перевод -->
+      <section class="pane" id="targetPane">
+        <div class="pane-head">
+          <h2>Перевод <span class="lang">RU</span></h2>
+          <div class="pane-actions">
+            <button id="copyBtn" class="ghost small" disabled>Копировать</button>
+            <button id="downloadTxtBtn" class="ghost small" disabled>Скачать .txt</button>
+            <button id="downloadDocBtn" class="ghost small" disabled>Скачать .doc</button>
+          </div>
+        </div>
+        <div class="progress" id="progress" hidden>
+          <div class="progress-bar"><div id="progressFill"></div></div>
+          <div id="progressText" class="muted"></div>
+        </div>
+        <div id="error" class="error" hidden></div>
+        <article id="output" class="text output" aria-live="polite">
+          <p class="placeholder">
+            Здесь появится перевод.<br /><br />
+            Как это работает: сначала модель читает весь текст и составляет «паспорт стиля» автора, затем
+            переводит по фрагментам, помня контекст, а потом редактор вычитывает каждый фрагмент — сверяет с
+            оригиналом и убирает кальки и канцелярит.
+          </p>
+        </article>
+        <div class="pane-foot">
+          <span id="usage" class="muted"></span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Настройки -->
+    <dialog id="settingsDialog">
+      <form method="dialog" id="settingsForm">
+        <h2>Настройки</h2>
+
+        <label class="field">
+          <span>API-ключ Anthropic</span>
+          <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-…" />
+          <small class="muted">
+            Ключ берётся на <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com</a>.
+            Он хранится только в этом браузере и отправляется только в Anthropic.
+          </small>
+        </label>
+
+        <label class="field">
+          <span>Модель</span>
+          <select id="model"></select>
+          <small class="muted" id="modelHint"></small>
+        </label>
+
+        <label class="field">
+          <span>Манера перевода</span>
+          <select id="fidelity">
+            <option value="literary">Свободная художественная — текст живёт по-русски</option>
+            <option value="balanced">Сбалансированная — естественно, но ближе к образам автора</option>
+            <option value="close">Близкая к оригиналу — минимум вольностей</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Глубина обдумывания</span>
+          <select id="effort">
+            <option value="medium">Средняя — быстрее и дешевле</option>
+            <option value="high">Высокая — рекомендуется</option>
+            <option value="xhigh">Очень высокая</option>
+            <option value="max">Максимальная — медленно и дорого</option>
+          </select>
+        </label>
+
+        <label class="check">
+          <input type="checkbox" id="analyzeStyle" />
+          <span>Сначала проанализировать стиль автора и составить глоссарий</span>
+        </label>
+
+        <label class="check">
+          <input type="checkbox" id="editPass" />
+          <span>Литературная редактура каждого фрагмента <small class="muted">(≈ вдвое дольше и дороже, заметно лучше)</small></span>
+        </label>
+
+        <label class="field">
+          <span>Размер фрагмента, символов</span>
+          <input type="number" id="chunkSize" min="2000" max="40000" step="1000" />
+          <small class="muted">Длинный текст переводится частями. Больше — связнее, меньше — надёжнее.</small>
+        </label>
+
+        <div class="dialog-actions">
+          <button value="cancel" class="ghost" formnovalidate>Отмена</button>
+          <button value="save" class="primary" id="saveSettings">Сохранить</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
